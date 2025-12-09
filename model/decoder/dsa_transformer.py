@@ -153,7 +153,7 @@ class PresetGenDecoder(nn.Module):
         num_heads: int = 8,
         num_layers: int = 6,
         dropout: float = 0.1,
-        categorical_param_size: Optional[dict] = None
+        categorical_param_size: Optional[dict] = CATEG_PARAM_SIZE
     ):
         super().__init__()
         self.embed_dim = embed_dim
