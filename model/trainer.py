@@ -149,7 +149,7 @@ class Trainer:
                 self.best_loss = val_loss
                 self._save_checkpoint(epoch, is_best=True)
             else:
-                self.early_stopping_counter += 1
+                early_stopping_counter += 1
                 if early_stopping_counter >= self.early_stopping_patience:
                     self.logger.info(f"Early stopping triggered after {epoch+1} epochs")
                     break
