@@ -8,6 +8,7 @@ from torch.utils.data import Dataset
 from dotenv import load_dotenv
 from utils.types import *
 from utils.synth1_params import *
+import numpy as np
 
 class Synth1Dataset(Dataset):
     def __init__(self, logger: logging.Logger = None, embed_dim: int = 512):
@@ -105,7 +106,8 @@ class Synth1Dataset(Dataset):
             label = item["label"]
             text = label["text"]
             texts.append(text)
-            audio = torch.as_tensor(item["audio"], dtype=torch.float32)
+            audio = item['audio']
+            audio = np.asarray(audio, dtype=np.float32)
             audios.append(audio)
             preset = item["preset"]
             for name in CATEGORICAL_PARAM_NAMES:
