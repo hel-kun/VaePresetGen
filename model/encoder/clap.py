@@ -62,6 +62,7 @@ class CLAPAudioEncorder(nn.Module):
         # 音声の前処理
         inputs = self.processor(
             audio=audio,
+            sampling_rate=48000, 
             padding=True,
             truncation=True,
             return_tensors="pt"
