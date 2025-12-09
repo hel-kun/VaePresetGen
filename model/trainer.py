@@ -363,6 +363,8 @@ class Trainer:
         os.makedirs(self.checkpoint_path, exist_ok=True)
         with open(f"{self.checkpoint_path}/detailed_evaluation.txt", "w") as f:
             f.write("Detailed Evaluation Results\n")
+            f.write(f"Model: {self.model.__class__.__name__} (heads={self.model.num_heads}, layers={self.model.num_layers}, dropout={self.model.dropout}, embed_dim={self.model.embed_dim})\n")
+            f.write(f"Mode: {self.mode}\n")
             f.write("=" * 80 + "\n\n")
             f.write("text_only mode:\n")
             f.write(f"Total Avg Loss: {text_only_avg_total_loss:.4f}\n")
