@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from typing import Optional, Tuple, Union, Callable
 from utils.types import *
-from utils.param import *
+from utils.synth1_params import *
 
 class DualStreamTransformerDecoderLayer(nn.Module):
     def __init__(
