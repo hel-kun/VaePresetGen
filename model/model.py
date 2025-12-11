@@ -9,19 +9,22 @@ class VaePresetGenModel(nn.Module):
     def __init__(
         self,
         embed_dim: int = 256,
+        latent_dim: int = 128,
         num_heads: int = 4,
         num_layers: int = 3,
         dropout: float = 0.1,
     ):
         super().__init__()
         self.embed_dim = embed_dim
+        self.latent_dim = latent_dim
         self.num_heads = num_heads
         self.num_layers = num_layers
         self.dropout = dropout
 
-        self.text_encoder = CLAPTextEncorder(output_dim=embed_dim)
-        self.audio_encoder = CLAPAudioEncorder(output_dim=embed_dim)
-        self.decoder = PresetGenDecoder(embed_dim, num_heads, num_layers, dropout)
+        self.text_encoder = CLAPTextEncorder(embed_dim=embed_dim, latent_dim=latent_dim)
+        self.audio_encoder = CLAPAudioEncorder(embed_dim=embed_dim, latent_dim=latent_dim)
+        self.latent_to_dec = nn.Linear(latent_dim, embed_dim)
+        self.decoder = PresetGenDecoder(embed_dim, num_heads=num_heads, num_layers=num_layers, dropout=dropout)
 
     @staticmethod
     def reparameterize(mu: torch.Tensor, logvar: torch.Tensor) -> torch.Tensor:
@@ -45,7 +48,7 @@ class VaePresetGenModel(nn.Module):
         else:
             z = self.reparameterize(mu_txt, logvar_txt)
     
-        memory = z.unsqueeze(1)
+        memory = self.latent_to_dec(z).unsqueeze(1)
         decoder_outputs = self.decoder(memory=memory)
     
         return {

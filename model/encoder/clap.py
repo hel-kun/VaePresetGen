@@ -6,19 +6,20 @@ class CLAPTextEncorder(nn.Module):
     def __init__(
         self,
         model_name="laion/clap-htsat-unfused",
-        output_dim=512,
+        embed_dim=512,
+        latent_dim=128,
     ):
         super().__init__()
         self.model = ClapTextModelWithProjection.from_pretrained(model_name)
         self.processor = AutoProcessor.from_pretrained(model_name)
         
-        if self.model.config.projection_dim != output_dim:
-            self.project = nn.Linear(self.model.config.projection_dim, output_dim)
+        if self.model.config.projection_dim != embed_dim:
+            self.project = nn.Linear(self.model.config.projection_dim, embed_dim)
         else:
             self.project = nn.Identity()
 
-        self.mu_head = nn.Linear(output_dim, output_dim)
-        self.logvar_head = nn.Linear(output_dim, output_dim)
+        self.mu_head = nn.Linear(embed_dim, latent_dim)
+        self.logvar_head = nn.Linear(embed_dim, latent_dim)
     
     def forward(self, text, enable_grad: bool = False):
         # テキストの前処理
@@ -44,19 +45,20 @@ class CLAPAudioEncorder(nn.Module):
     def __init__(
         self,
         model_name="laion/clap-htsat-unfused",
-        output_dim=512,
+        embed_dim=512,
+        latent_dim=128,
     ):
         super().__init__()
         self.model = ClapAudioModelWithProjection.from_pretrained(model_name)
         self.processor = AutoProcessor.from_pretrained(model_name)
         
-        if self.model.config.projection_dim != output_dim:
-            self.project = nn.Linear(self.model.config.projection_dim, output_dim)
+        if self.model.config.projection_dim != embed_dim:
+            self.project = nn.Linear(self.model.config.projection_dim, embed_dim)
         else:
             self.project = nn.Identity()
         
-        self.mu_head = nn.Linear(output_dim, output_dim)
-        self.logvar_head = nn.Linear(output_dim, output_dim)
+        self.mu_head = nn.Linear(embed_dim, latent_dim)
+        self.logvar_head = nn.Linear(embed_dim, latent_dim)
     
     def forward(self, audio):
         # 音声の前処理

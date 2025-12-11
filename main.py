@@ -18,9 +18,12 @@ def main(args):
     logger.info(f"mode={mode} kl_weight={args.kl_weight} param_loss_weight={args.param_loss_weight}")
     logger.info(f"embedding_dim={args.embedding_dim} heads={args.num_heads} layers={args.num_layers}")
 
+    datetime_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+
     dataset = Synth1Dataset(logger=logger, embed_dim=args.embedding_dim)
     model = VaePresetGenModel(
         embed_dim=args.embedding_dim,
+        latent_dim=args.latent_dim,
         num_heads=args.num_heads,
         num_layers=args.num_layers,
         dropout=args.dropout,
@@ -30,6 +33,7 @@ def main(args):
         dataset=dataset,
         optimizer=torch.optim.Adam(model.parameters(), lr=args.learning_rate),
         scheduler=None,
+        checkpoint_path=f"checkpoints/{datetime_str}",
         log_interval=args.log_interval,
         early_stopping_patience=args.es_patience,
         logger=logger,
@@ -55,6 +59,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # Model
     parser.add_argument("--embedding-dim", type=int, default=256, help="Embedding dimension")
+    parser.add_argument("--latent-dim", type=int, default=128, help="Latent dimension (z)")
     parser.add_argument("--num-heads", type=int, default=4, help="Number of transformer attention heads")
     parser.add_argument("--num-layers", type=int, default=3, help="Number of transformer layers")
     parser.add_argument("--dropout", type=float, default=0.1, help="Dropout rate")

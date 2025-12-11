@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from typing import Optional, Tuple, Union, Callable
 from utils.types import *
 from utils.synth1_params import *
+import math
 
 class DualStreamTransformerDecoderLayer(nn.Module):
     def __init__(
@@ -161,12 +162,22 @@ class PresetGenDecoder(nn.Module):
         self.num_layers = num_layers
         self.dropout = dropout
 
+        num_categ = len(CATEGORICAL_PARAM_NAMES)
+        num_cont = len(CONTINUOUS_PARAM_NAMES)
         self.categ_queries = nn.Parameter(torch.randn(len(CATEGORICAL_PARAM_NAMES), embed_dim))
         self.cont_queries = nn.Parameter(torch.randn(len(CONTINUOUS_PARAM_NAMES), embed_dim))
         nn.init.xavier_uniform_(self.categ_queries)
         nn.init.xavier_normal_(self.cont_queries)
 
-        # Create name-to-index mappings for parameter lookup
+        # パラメタ名埋め込みを加算
+        self.categ_name_embed = nn.Embedding(num_categ, embed_dim)
+        self.cont_name_embed = nn.Embedding(num_cont, embed_dim)
+
+        self.categ_pos_embed = nn.Parameter(torch.zeros(1, num_categ, embed_dim))
+        self.cont_pos_embed = nn.Parameter(torch.zeros(1, num_cont, embed_dim))
+        nn.init.normal_(self.categ_pos_embed, mean=0.0, std=0.02)
+        nn.init.normal_(self.cont_pos_embed, mean=0.0, std=0.02)
+
         self.categ_name_to_idx = {name: idx for idx, name in enumerate(CATEGORICAL_PARAM_NAMES)}
         self.cont_name_to_idx = {name: idx for idx, name in enumerate(CONTINUOUS_PARAM_NAMES)}
 
@@ -194,15 +205,13 @@ class PresetGenDecoder(nn.Module):
         self.continuous_norm = nn.LayerNorm(embed_dim)
         self.categorical_norm = nn.LayerNorm(embed_dim)
 
+        default_categ_sizes = categorical_param_size if categorical_param_size is not None else CATEG_PARAM_SIZE
         self.categorical_param_heads = nn.ModuleDict({
-            name: nn.Linear(embed_dim, size) for name, size in (categorical_param_size if categorical_param_size is not None else {name: 5 for name in CATEGORICAL_PARAM_NAMES}).items()
+            name: nn.Linear(embed_dim, size) for name, size in default_categ_sizes.items()
         })
-
         self.continuius_param_heads = nn.ModuleDict({
-            name: nn.Sequential(
-                nn.Linear(embed_dim, 1),
-                nn.Sigmoid() # 0〜1に正規化
-            ) for name in CONTINUOUS_PARAM_NAMES
+            name: nn.Sequential(nn.Linear(embed_dim, 1), nn.Sigmoid())
+            for name in CONTINUOUS_PARAM_NAMES
         })
 
     def forward(
@@ -218,8 +227,16 @@ class PresetGenDecoder(nn.Module):
         memory_is_causal: bool = False,
     ) -> Tuple[dict, dict]:
         batch_size = memory.size(0)
-        categorical_output = self.categ_queries.unsqueeze(0).expand(batch_size, -1, -1)
-        continuous_output = self.cont_queries.unsqueeze(0).expand(batch_size, -1, -1)
+        categ_query = self.categ_queries.unsqueeze(0).expand(batch_size, -1, -1)
+        cont_query = self.cont_queries.unsqueeze(0).expand(batch_size, -1, -1)
+
+        categ_ids = torch.arange(len(CATEGORICAL_PARAM_NAMES), device=memory.device)
+        cont_ids = torch.arange(len(CONTINUOUS_PARAM_NAMES), device=memory.device)
+
+        categ_query = categ_query + self.categ_name_embed(categ_ids).unsqueeze(0) + self.categ_pos_embed
+        cont_query = cont_query + self.cont_name_embed(cont_ids).unsqueeze(0) + self.cont_pos_embed
+        categorical_output = categ_query
+        continuous_output = cont_query
 
         continuous_intermediates = [continuous_output]
         categorical_intermediates = [categorical_output]
