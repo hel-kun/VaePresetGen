@@ -154,7 +154,7 @@ class Trainer:
             plot_losses(self.param_train_losses, self.param_val_losses, f"{self.checkpoint_path}/param_loss_curve.png")
             plot_losses(self.kl_train_losses, self.kl_val_losses, f"{self.checkpoint_path}/kl_loss_curve.png")
             self.logger.info(f"Epoch {epoch+1}/{num_epochs} - Train Loss: {epoch_param_loss/len(self.train_dataloader)}, Val Loss: {val_loss}")
-            if epoch % self.save_interval == 0:
+            if epoch % self.log_interval == 0:
                 self._save_checkpoint(epoch, is_best=False)
             if early_stopping_counter >= self.early_stopping_patience:
                 self.logger.info(f"Early stopping triggered after {epoch+1} epochs")

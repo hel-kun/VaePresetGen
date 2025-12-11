@@ -70,7 +70,6 @@ if __name__ == "__main__":
     parser.add_argument("--learning-rate", type=float, default=1e-4, help="Learning rate")
     parser.add_argument("--epochs", type=int, default=100, help="Number of training epochs")
     parser.add_argument("--es-patience", type=int, default=10, help="Early stopping patience")
-    parser.add_argument("--save-interval", type=int, default=10, help="Model save interval (in epochs)")
     parser.add_argument("--log-interval", type=int, default=10, help="Logging interval (in batches)")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
 
