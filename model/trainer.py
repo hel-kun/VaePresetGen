@@ -98,6 +98,7 @@ class Trainer:
 
     def train(self, num_epochs: int, resume_from_checkpoint: Optional[str] = None):
         start_epoch = 0
+        early_stopping_counter = 0
         if resume_from_checkpoint:
             start_epoch = self._load_checkpoint(resume_from_checkpoint)
             self.logger.info(f"Resumed training from checkpoint: {resume_from_checkpoint} at epoch {start_epoch}")
@@ -106,7 +107,6 @@ class Trainer:
             self.model.train()
             epoch_param_loss = 0.0
             epoch_kl_loss = 0.0
-            early_stopping_counter = 0
 
             train_bar = tqdm.tqdm(total=len(self.train_dataloader), desc=f"Epoch {epoch+1}/{num_epochs}", postfix="total_loss=0.0, categ_loss=0.0, cont_loss=0.0")
             for batch in self.train_dataloader:
